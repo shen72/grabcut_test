@@ -1,0 +1,25 @@
+package GrabCut;
+
+message ImageMask {
+  optional fixed64 image_id = 1;
+  optional bytes image_mask = 2;
+  optional fixed64 height = 3;
+  optional fixed64 weight = 4;
+}
+
+message ImageMaskList {
+  optional string image_set_id = 1;
+  repeated ImageMask masks = 2;  
+}
+
+message TestResponse {
+  enum ResponseCode {
+    OK = 0;
+    ERROR = 1;
+  }
+  optional ResponseCode code = 1;
+  optional string error_msg = 2;
+  optional string image_set_id = 3;
+  optional double precision = 4;
+  optional double recall = 5;
+}

@@ -1,0 +1,3 @@
+RCF_BEGIN(I_GrabCutTest, "GrabCut Test")
+  RCF_METHOD_R2(TestResponse, JudgeList, const ImageMaskList&, const ImageMaskList&)
+RCF_END(I_GrabCutTest)
