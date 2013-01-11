@@ -12,7 +12,7 @@ rcv_env.Append(CCFLAGS = ['-DRCF_USE_PROTOBUF', '-w'])
 rcv_env.Program('grabcut_test_server',
   [ 'GrabcutMaskJudge.cc',
     'grabcut_test.pb.cc',
-    '../RCF/src/RCF/RCF.cpp'],
+    'RCF/src/RCF/RCF.cpp'],
   LIBS = ['gflags', 'glog', 'protobuf'])
 
 rcv_env.Program('mock_client',
@@ -21,3 +21,13 @@ rcv_env.Program('mock_client',
     'RCF/src/RCF/RCF.cpp'],
   LIBS = ['gflags', 'glog', 'protobuf', 'opencv_core', 'opencv_highgui'])
 
+swig_env = rcv_env.Clone()
+swig_env.ParseConfig('pkg-config --cflags --libs python')
+
+swig_env.SharedLibrary('_GrabcutTestClient',
+  [ 'grabcut_test.pb.cc',
+    'GrabcutTestClient.cc',
+    'GrabcutTestClient_wrap.cxx',
+    'RCF/src/RCF/RCF.cpp'
+  ],
+  LIBS = ['protobuf', 'gflags', 'glog'])

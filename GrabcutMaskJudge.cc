@@ -19,13 +19,39 @@ DEFINE_int32(port, 9876, "");
 
 static bool ImageMaskComparator(const ImageMask& img1, const ImageMask& img2);
 
+class JSException : public exception {
+ public:
+  JSException(const string& msg) : msg_(msg) {}
+  ~JSException() throw() {}
+  virtual const char* what() const throw() {
+    return msg_.c_str();
+  }
+
+ private:
+  string msg_;
+};
+
 class GrabcutMaskJudge {
  public:
   static void JudgeOne(const ImageMask& img, const ImageMask& gt,
                        double *prec, double* recall) {
     
+    /*
     CHECK(img.image_id() == gt.image_id() &&
-          img.image_mask().size() == gt.image_mask().size());
+          img.image_mask().size() == gt.image_mask().size())
+        << "Image ID : " << img.image_id() << " vs " << gt.image_id() << ends
+        << "Mask size : " << img.image_mask().size() << " vs "
+        << gt.image_mask().size();
+
+    */
+
+    if (img.image_id() != gt.image_id()) {
+      throw new JSException("Inconsistent Image ID");
+    }
+
+    if (img.image_mask().size() != gt.image_mask().size()) {
+      throw new JSException("Inconsistent Mask size");
+    }
 
     size_t TP = 0, FP = 0, FN = 0;
     const string& img_content = img.image_mask();
@@ -89,6 +115,27 @@ static bool ImageMaskComparator(const ImageMask& img1,
 
 class GrabCutTestServiceImpl {
  public:
+  TestResponse JudgeOne(const ImageMask& mask,
+                        const ImageMask& gt_mask) throw (){
+    double precision, recall;
+    TestResponse response;
+    try
+    {
+      GrabcutMaskJudge::JudgeOne(mask, gt_mask, &precision, &recall);
+
+      response.set_code(GrabCut::TestResponse_ResponseCode_OK);
+      response.set_precision(precision);
+      response.set_recall(recall);      
+    } catch (exception& e) {
+      response.set_code(GrabCut::TestResponse_ResponseCode_ERROR);
+      response.set_error_msg(e.what());
+    } catch (...) {
+      response.set_code(GrabCut::TestResponse_ResponseCode_ERROR);  
+    }
+    
+    return response;
+  }
+
   TestResponse JudgeList(const ImageMaskList& candidate_list,
                          const ImageMaskList& gt_list) throw (){
     double precision, recall;
@@ -121,6 +168,7 @@ int main(int argc, char* argv[]) {
 
   RCF::RcfInitDeinit rcf_init;
   RCF::RcfServer server(RCF::TcpEndpoint(static_cast<int>(FLAGS_port)));
+  server.getServerTransport().setMaxIncomingMessageLength(50*1024*1024);
 
   RCF::ThreadPoolPtr poolptr(new RCF::ThreadPool(10));
   server.setThreadPool(poolptr);
