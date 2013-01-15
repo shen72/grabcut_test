@@ -31,3 +31,9 @@ swig_env.SharedLibrary('_GrabcutTestClient',
     'RCF/src/RCF/RCF.cpp'
   ],
   LIBS = ['protobuf', 'gflags', 'glog'])
+
+env.Program('floodfill',
+  [ 'floodfillmain.cc',
+    'MaskFloodfill.cc',
+  ],
+  LIBS = ['gflags', 'glog', 'opencv_core', 'opencv_highgui'])
