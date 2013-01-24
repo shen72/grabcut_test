@@ -1,2 +1,5 @@
 *.o
 build/*
+scripts/*
+nohup*
+result.jpg

@@ -24,10 +24,12 @@ Mat FloodFillNormalizer::Normalize(const Mat& mask) {
     fill_(work_.rows - 1, 0, 1, &work_, mask);
   }
 
+  LOG(INFO) << "Edges Filled";
+
   int id = 2;
   for (int y = 0; y < work_.rows; y++) {
     for (int x = 0; x < work_.cols; x++) {
-      if (work_.at<uint8_t>(y, x) == 0 && mask.at<uint8_t>(y, x) == 0) {
+      if (work_.at<int>(y, x) == 0 && mask.at<uint8_t>(y, x) == 0) {
         fill_(y, x, id, &work_, mask);
         id++;
       }
@@ -39,7 +41,7 @@ Mat FloodFillNormalizer::Normalize(const Mat& mask) {
   std::fill(count_.get(), count_.get() + id, 0);
   for (int y = 0; y < work_.rows; y++) {
     for (int x = 0; x < work_.cols; x++) {
-      const int id_ = work_.at<uint8_t>(y, x);
+      const int id_ = work_.at<int>(y, x);
       if (id_ > 1 && id_ < id) { count_[id_]++; }
     }
   }
@@ -53,7 +55,7 @@ Mat FloodFillNormalizer::Normalize(const Mat& mask) {
   Mat retval = mask.clone();
   for (int y = 0; y < mask.rows; y++) {
     for (int x = 0; x < mask.cols; x++) {
-      const int id_ = work_.at<uint8_t>(y, x);
+      const int id_ = work_.at<int>(y, x);
       if (id_ > 1 && count_[id_] < area_threshold_) {
         retval.at<uint8_t>(y, x) = 255;
       }
@@ -69,19 +71,19 @@ void FloodFillNormalizer::fill_(int y, int x, int id, Mat* work_,
 
   using namespace std;
   if (mask_.at<uint8_t>(y, x) != 0 ||
-      work_->at<uint8_t>(y, x) != 0) { return; }
+      work_->at<int>(y, x) != 0) { return; }
 
   queue<Point> q_;
   q_.push(Point(x, y));
-  work_->at<uint8_t>(y, x) = id;
+  work_->at<int>(y, x) = id;
   while (!q_.empty()) {
     Point p_ = q_.front();
     for (int d = 0; d < 4; d++) {
       Point pp_ = p_ + dp[d];
       if (inrange_(pp_, mask_.size()) && 
-          work_->at<uint8_t>(pp_) == 0 &&
+          work_->at<int>(pp_) == 0 &&
           mask_.at<uint8_t>(pp_) == 0) {
-        work_->at<uint8_t>(pp_) = id;
+        work_->at<int>(pp_) = id;
         q_.push(pp_);
       }
     }
@@ -90,5 +92,5 @@ void FloodFillNormalizer::fill_(int y, int x, int id, Mat* work_,
 }
 
 bool FloodFillNormalizer::inrange_(const Point& p, const cv::Size& size) {
-  return p.x > 0 && p.y > 0 && p.x < size.width && p.y < size.height;
+  return p.x >= 0 && p.y >= 0 && p.x < size.width && p.y < size.height;
 }

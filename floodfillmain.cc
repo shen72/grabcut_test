@@ -2,6 +2,7 @@
 #include "macros.h"
 
 DEFINE_string(mask_name, "", "");
+DEFINE_string(new_name, "result.jpg", "");
 
 using namespace cv;
 
@@ -14,5 +15,5 @@ int main(int argc, char* argv[]) {
 
   FloodFillNormalizer foo(200);
   Mat newmask = foo.Normalize(mask);
-  imwrite("result.jpg", newmask);
+  imwrite(FLAGS_new_name, newmask);
 }
